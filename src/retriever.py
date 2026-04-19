@@ -46,4 +46,4 @@ def retrieve(query, top_k=3):
         scored.append((score, mem.text))
         
     scored.sort(reverse=True)
-    return [text for _, text in scored[:top_k]]
+    return scored[:top_k]

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from src.memory_store import add_memory
-from src.retriever import retrieve
+from src.decision_engine import answer
 
 router=APIRouter()
 
@@ -11,5 +11,5 @@ def add_memory_api(text: str):
 
 @router.get("/query")
 def query_api(q: str):
-    results=retrieve(q)
+    results=answer(q)
     return {"response": results}
