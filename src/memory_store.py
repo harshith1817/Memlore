@@ -32,11 +32,12 @@ from src.models import Memory
     
 #     return "Memory stored successfully!"
 
-def add_memory(text):
+def add_memory(user_id, text):
     db=SessionLocal()
     embedding=get_embedding(text).tolist()
     
     new_memory=Memory(
+        user_id=user_id,
         text=text,
         embedding=json.dumps(embedding),
         timestamp=str(datetime.now())

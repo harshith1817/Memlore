@@ -1,10 +1,10 @@
 from src.retriever import retrieve
 from src.llm import generate_llm_response
 
-Threshold=0.7
+Threshold=0.4
 
-def answer(query):
-    results=retrieve(query)
+def answer(query, user_id):
+    results=retrieve(user_id, query)
     
     if not results:
         return generate_llm_response(query)

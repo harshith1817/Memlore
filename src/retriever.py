@@ -31,9 +31,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 #     # Return top results
 #     return [text for _, text in scored_results[:top_k]]
 
-def retrieve(query, top_k=3):
+def retrieve(user_id, query, top_k=3):
     db=SessionLocal()
-    memories=db.query(Memory).all()
+    memories=db.query(Memory).filter(Memory.user_id==user_id).all()
     db.close()
     
     query_emb=get_embedding(query).reshape(1,-1)
