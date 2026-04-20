@@ -2,36 +2,11 @@ import json
 import numpy as np
 from datetime import datetime
 from src.embedder import get_embedding
-# from src.memory_store import load_memory
 from src.models import Memory
+from src.memory_store import update_access
 from src.database import SessionLocal
+from src.graph import expand_query
 from sklearn.metrics.pairwise import cosine_similarity
-
-# def cosine_similarity(a,b):
-#     a=np.array(a)
-#     b=np.array(b)
-#     return np.dot(a,b) / (np.linalg.norm(a) * np.linalg.norm(b))
-
-# def retrieve(query, top_k=3):
-#     memory=load_memory()
-    
-#     if len(memory)==0:
-#         return []
-    
-#     query_embedding=get_embedding(query)
-    
-#     scored_results=[]
-    
-#     for item in memory:
-#         score=cosine_similarity(query_embedding, item["embedding"])
-#         scored_results.append((score,item["text"]))
-    
-#     # Sort by similarity (highest first)  
-#     scored_results.sort(key=lambda x:x[0], reverse=True)
-    
-#     # Return top results
-#     return [text for _, text in scored_results[:top_k]]
-
 
 
 def apply_decay(memory):
@@ -43,9 +18,8 @@ def apply_decay(memory):
     return max(memory.importance, 0.1)
 
 
-
-
 def retrieve(user_id, query, top_k=3):
+    query=expand_query(query)
     db=SessionLocal()
     memories=db.query(Memory).filter(Memory.user_id==user_id).all()
     
@@ -63,14 +37,17 @@ def retrieve(user_id, query, top_k=3):
         
         final_score=(0.6*similarity)+(0.3*importance)+(0.1*recency)
         
-        scored.sort(reverse=True, key=lambda x: x[0])
+        scored.append((final_score, mem))
         
     scored.sort(reverse=True, key=lambda x:x[0])
     
     #Reinforce access
     for _, mem in scored[:top_k]:
         update_access(mem, db)
-    
+     
+    results=[]
+    for score, mem in scored[:top_k]:
+        results.append((score, mem.text))
+
     db.close()
-    
-    return [(score, mem.text) for score, mem in scored[:top_k]]
+    return results

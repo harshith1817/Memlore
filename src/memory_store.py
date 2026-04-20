@@ -1,36 +1,9 @@
 import json
-import os
 from datetime import datetime
 from src.embedder import get_embedding
 from src.database import SessionLocal
 from src.models import Memory
-
-# MEMORY_FILE="data/memory.json"
-
-# def load_memory():
-#     if not os.path.exists(MEMORY_FILE):
-#         return []
-#     with open(MEMORY_FILE, "r") as f:
-#         return json.load(f)
-
-# def save_memory(memory):
-#     with open(MEMORY_FILE, "w") as f:
-#         json.dump(memory, f, indent=4)
-    
-# def add_memory(text):
-#     memory=load_memory()
-#     embedding=get_embedding(text)
-    
-#     new_entry={
-#         "text": text,
-#         "embedding": embedding.tolist(),
-#         "timestamp": str(datetime.now())
-#     }
-    
-#     memory.append(new_entry)
-#     save_memory(memory)
-    
-#     return "Memory stored successfully!"
+from src.graph import build_graph
 
 
 def calculate_importance(text):
@@ -44,6 +17,7 @@ def add_memory(user_id, text):
     db=SessionLocal()
     embedding=get_embedding(text).tolist()
     now=str(datetime.now())
+    build_graph(text)
     
     new_memory=Memory(
         user_id=user_id,
@@ -59,3 +33,9 @@ def add_memory(user_id, text):
     db.commit()
     db.close()
     
+    
+def update_access(memory, db):
+    memory.access_count+=1
+    memory.impotance=min(memory.importance+0.05,1.0)
+    memory.last_accessed=str(datetime.now())
+    db.commit()
