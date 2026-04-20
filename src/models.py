@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Float
 from src.database import Base
 
 class Memory(Base):
@@ -9,6 +9,9 @@ class Memory(Base):
     text=Column(String)
     embedding=Column(String)
     timestamp=Column(String)
+    importance=Column(Float)
+    access_count=Column(Integer)
+    last_accessed=Column(String)
     
 class User(Base):
     __tablename__="users"
