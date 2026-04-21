@@ -20,19 +20,28 @@ const Message = styled.div`
 `;
 
 const BotBubble = styled.div`
-  max-width: 70%;
-  padding: 10px;
-  border-radius: 10px;
-  background: #334155;
-  color: #e2e8f0;
+    padding: 10px;
+    background: #334155;
+    color: #e2e8f0;
+    align-self: flex-start;
+    border-radius: 1rem 1rem 1rem 0;
+    max-width: 70%;
+    word-wrap: break-word;
+    font-size: 1rem;
+    text-align: left;
+
 `;
 
 const UserBubble = styled.div`
-  max-width: 70%;
-  padding: 10px;
-  border-radius: 10px;
-  background: #2563eb;
-  color: #ffffff;
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 1rem 1rem 0 1rem;
+    background: #2563eb;
+    color: #ffffff;
+    align-self: flex-end;
+    word-wrap: break-word;
+    font-size: 1rem;
+    text-align: left;
 `;
 
 const InputContainer = styled.div`

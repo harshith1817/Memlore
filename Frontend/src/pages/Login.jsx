@@ -1,10 +1,101 @@
 import React, {useState} from "react";
+import styled from "styled-components";
+import { useNavigate } from "react-router-dom";
+
+const Container = styled.div`
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background: #0f172a;
+`;
+
+const Card = styled.div`
+  width: 25%;
+  height: 55%;
+  background: #1e293b;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+`;
+
+const Title = styled.h2`
+  text-align: center;
+  color: #38bdf8;
+  margin-bottom: 20px;
+`;
+
+const InputDiv = styled.input`
+  width: 94%;
+  padding: 12px;
+  border-radius: 0.7rem;
+  border: none;
+  outline: none;
+  background: #334155;
+  color: white;
+`;
+
+const Button = styled.button`
+  width: 100%;
+  padding: 12px;
+  margin-top: 1rem;
+  border: none;
+  border-radius: 0.7rem;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+
+  &:hover {
+    background: #1d4ed8;
+  }
+`;
+
+const LinkText = styled.p`
+  text-align: center;
+  margin-top: 1rem;
+  color: #cbd5f5;
+`;
+
+const LinkSpan = styled.span`
+  color: #38bdf8;
+  cursor: pointer;
+    &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const EmailDiv=styled.div`
+margin-bottom: 0.8rem;
+`;
+
+const PasswordDiv=styled.div`
+margin-bottom: 0.8rem;
+`;
+
+const HeadDiv=styled.div`
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  color: #e2e8f0;
+`;
+
+const Text=styled.p`
+    color: #94a3b8;
+    font-size: 1rem;
+    margin-bottom: 0.3rem;   
+`;
 
 function Login(){
     const[email, setEmail]=useState("");
     const[password, setPassword]=useState("");
+    const navigate=useNavigate();
 
     const login=async()=>{
+        if(!email || !password){
+            alert("Please fill all fields");
+            return;
+        }
         try{
             const res=await fetch(
                 `http://127.0.0.1:8000/login?email=${email}&password=${password}`,
@@ -14,32 +105,58 @@ function Login(){
             );
 
             const data=await res.json();
-            localStorage.setItem("token", data.access_token);
 
-            alert("Login Successful!");
+            if(data.access_token){
+                localStorage.setItem("token", data.access_token);
+                navigate("/chat");
+            }else{
+                alert("Invalid credentials");
+            }
         }catch(err){
             console.error(err);
         }
     };
 
     return(
-        <div>
-            <h2>Login</h2>
+        <Container>
+            <Title>Memlore AI</Title>
+            <Card>
+                <HeadDiv>
+                    <h2>Login</h2>
+                </HeadDiv>
+                
 
-            <input
-                type="Email"
-                placeholder="Email"
-                onChange={(e)=>setEmail(e.target.value)}
-            />
+                <EmailDiv>
+                <Text>Email address</Text>
+                <InputDiv
+                    type="Email"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e)=>setEmail(e.target.value)}
+                />
+                </EmailDiv>
+                
+                <PasswordDiv>
+                <Text>Password</Text>
+                <InputDiv
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e)=>setPassword(e.target.value)}
+                />
+                </PasswordDiv>
+                
 
-            <input
-                type="password"
-                placeholder="password"
-                onChange={(e)=>setPassword(e.target.value)}
-            />
-
-            <button onClick={login}>Login</button>
-        </div>
+                <Button onClick={login}>Login</Button>
+                
+                <LinkText>
+                    Don't have an account?{" "}
+                    <LinkSpan onClick={()=>navigate("/signup")}>
+                        Signup
+                    </LinkSpan>
+                </LinkText>
+            </Card>
+        </Container>
     );
 }
 
