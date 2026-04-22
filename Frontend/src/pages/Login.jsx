@@ -39,7 +39,6 @@ const InputDiv = styled.input`
 const Button = styled.button`
   width: 100%;
   padding: 12px;
-  margin-top: 1rem;
   border: none;
   border-radius: 0.7rem;
   background: #2563eb;
@@ -86,14 +85,30 @@ const Text=styled.p`
     margin-bottom: 0.3rem;   
 `;
 
+const ErrorText = styled.p`
+  color: #f87171;
+  margin-top: 8px;
+  font-size: 1rem;
+    display: flex;
+  align-items: center;
+  flex-direction: column;
+`;
+
 function Login(){
     const[email, setEmail]=useState("");
     const[password, setPassword]=useState("");
+    const[error, setError]=useState("");
     const navigate=useNavigate();
 
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") login();
+    };
+
     const login=async()=>{
+        setError("");
+
         if(!email || !password){
-            alert("Please fill all fields");
+            setError("Please fill all fields");
             return;
         }
         try{
@@ -106,14 +121,15 @@ function Login(){
 
             const data=await res.json();
 
-            if(data.access_token){
+            if(res.ok && data.access_token){
                 localStorage.setItem("token", data.access_token);
                 navigate("/chat");
             }else{
-                alert("Invalid credentials");
+                setError("Invalid Credentials!");
             }
         }catch(err){
             console.error(err);
+            setError("Server error. Please try again.")
         }
     };
 
@@ -133,6 +149,7 @@ function Login(){
                     placeholder="Enter your email address"
                     value={email}
                     onChange={(e)=>setEmail(e.target.value)}
+                    onKeyDown={handleKeyDown}
                 />
                 </EmailDiv>
                 
@@ -143,11 +160,13 @@ function Login(){
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e)=>setPassword(e.target.value)}
+                    onKeyDown={handleKeyDown}
                 />
                 </PasswordDiv>
                 
+                {error && <ErrorText>{error}</ErrorText>}
 
-                <Button onClick={login}>Login</Button>
+                <Button onClick={login}>Log In</Button>
                 
                 <LinkText>
                     Don't have an account?{" "}

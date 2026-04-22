@@ -41,12 +41,17 @@ def retrieve(user_id, query, top_k=3):
         
     scored.sort(reverse=True, key=lambda x:x[0])
     
+    filtered=[(score,mem) for score, mem in scored if score>0.3]
+    top_results=filtered[:top_k] if filtered else scored[:1]
+    
+    
+    
     #Reinforce access
-    for _, mem in scored[:top_k]:
+    for _, mem in top_results:
         update_access(mem, db)
      
     results=[]
-    for score, mem in scored[:top_k]:
+    for score, mem in top_results:
         results.append((score, mem.text))
 
     db.close()

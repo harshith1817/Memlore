@@ -15,8 +15,18 @@ def calculate_importance(text):
 
 def add_memory(user_id, text):
     db=SessionLocal()
+    
+    existing = db.query(Memory).filter(
+        Memory.user_id == user_id,
+        Memory.text == text
+    ).first()
+    
+    if existing:
+        db.close()
+        return
+    
     embedding=get_embedding(text).tolist()
-    now=str(datetime.now())
+    now=datetime.now().isoformat()
     build_graph(text)
     
     new_memory=Memory(
@@ -36,6 +46,6 @@ def add_memory(user_id, text):
     
 def update_access(memory, db):
     memory.access_count+=1
-    memory.impotance=min(memory.importance+0.05,1.0)
+    memory.importance=min(memory.importance+0.05,1.0)
     memory.last_accessed=str(datetime.now())
     db.commit()

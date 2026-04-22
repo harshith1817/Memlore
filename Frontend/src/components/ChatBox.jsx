@@ -95,6 +95,7 @@ const ChatWindow = styled.div`
   background: #1e293b;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 `;
 
 const MessageContainer = styled.div`
@@ -103,12 +104,61 @@ const MessageContainer = styled.div`
   padding: 16px;
 `;
 
+const EmptyState = styled.div`
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #94a3b8;
+  text-align: center;
+`;
+
+const SuggestionBox = styled.div`
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const Suggestion = styled.button`
+  background: #334155;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #e2e8f0;
+  cursor: pointer;
+
+  &:hover {
+    background: #475569;
+  }
+`;
+
 function ChatBox(){
     const [messages, setMessages]=useState([]);
     const [input, setInput]=useState("");
+    const handleSuggestion = (text) => {
+    setInput(text);
+    setTimeout(() => sendMessage(), 100);
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter") sendMessage();
+    };
 
     const sendMessage=async()=>{
         if(!input) return;
+
+        const userMessage=input;
+
+        setMessages(prev=>[
+            ...prev,
+            {type: "user", text: userMessage}
+        ]);
+
+        setInput("");
 
         try{
             const res=await fetch(
@@ -122,12 +172,11 @@ function ChatBox(){
 
             const data=await res.json();
 
-            setMessages([
-                ...messages,
-                {user: input, bot: data.response},
+            setMessages(prev => [
+            ...prev,
+            { type: "bot", text: data.response }
             ]);
 
-            setInput("");
         }catch (err){
             console.error(err);
         }
@@ -138,24 +187,46 @@ function ChatBox(){
             <Title>Memlore AI</Title>
             <ChatWindow>
                 <MessageContainer>
-                    {messages.map((m, i) => (
-                    <div key={i}>
-                        <Message isUser={false}>
-                        <BotBubble>{m.bot}</BotBubble>
-                        </Message>
+                {messages.length === 0 ? (
+                    <EmptyState>
+                    <div style={{ fontSize: "40px" }}>🧠</div>
 
-                        <Message isUser={true}>
-                        <UserBubble isUser>{m.user}</UserBubble>
+                    <h2 style={{ color: "#38bdf8" }}>Memlore AI</h2>
+                    <p>Ask about your memories or anything you’ve stored</p>
+
+                    <SuggestionBox>
+                        <Suggestion onClick={() => handleSuggestion("What do I like?")}>
+                        What do I like?
+                        </Suggestion>
+
+                        <Suggestion onClick={() => handleSuggestion("What do you remember about me?")}>
+                        My memories
+                        </Suggestion>
+
+                        <Suggestion onClick={() => handleSuggestion("Summarize my interests")}>
+                        My interests
+                        </Suggestion>
+                    </SuggestionBox>
+                    </EmptyState>
+                ) : (
+                    messages.map((m, i) => (
+                        <Message key={i} isUser={m.type==="user"}>
+                            {m.type==="user" ? (
+                                <UserBubble>{m.text}</UserBubble>
+                            ):(
+                                <BotBubble>{m.text}</BotBubble>
+                            )}
                         </Message>
-                    </div>
-                    ))}
+                    ))
+                )}
                 </MessageContainer>
                 <ChatFooter>
                     <InputContainer>
                         <Input
                             value={input}
                             onChange={(e)=>setInput(e.target.value)}
-                            placeholder="Ask something..."
+                            placeholder="Ask about your memories..."
+                            onKeyDown={handleKeyDown}
                         />
                         <SendButton onClick={sendMessage}>
                             <IoSend color="white" size={18} />

@@ -144,7 +144,7 @@ function Signup() {
           />
         </FieldDiv>
 
-        <Button onClick={signup}>Signup</Button>
+        <Button onClick={signup}>Create an account</Button>
 
         <LinkText>
           Already have an account?{" "}
