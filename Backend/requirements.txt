@@ -6,8 +6,11 @@ fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
-transformers
-torch
 python-jose
 passlib[bcrypt]
-spcay
+spacy
+nltk
+rapidfuzz
+textblob
+groq
+python-dotenv
