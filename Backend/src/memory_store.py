@@ -15,26 +15,27 @@ def calculate_importance(text):
 
 def add_memory(user_id, text):
     db=SessionLocal()
+    clean_text = text.lower().replace("?", "").strip()
     
     existing = db.query(Memory).filter(
         Memory.user_id == user_id,
-        Memory.text == text
+        Memory.text == clean_text
     ).first()
     
     if existing:
         db.close()
         return
     
-    embedding=get_embedding(text).tolist()
+    embedding=get_embedding(clean_text).tolist()
     now=datetime.now().isoformat()
     build_graph(text)
     
     new_memory=Memory(
         user_id=user_id,
-        text=text,
+        text=clean_text,
         embedding=json.dumps(embedding),
         timestamp=now,
-        importance=calculate_importance(text),
+        importance=calculate_importance(clean_text),
         access_count=0,
         last_accessed=now
     )

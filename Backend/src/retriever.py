@@ -18,7 +18,13 @@ def apply_decay(memory):
     return max(memory.importance, 0.1)
 
 
-def retrieve(user_id, query, top_k=3):
+def extract_keywords(text):
+    stopwords = {"what", "is", "are", "the", "a", "an", "do", "i", "you", "me", "my"}
+    words = text.lower().split()
+    return [w for w in words if w not in stopwords]
+
+
+def retrieve(user_id, query, top_k=1):
     query=expand_query(query)
     db=SessionLocal()
     memories=db.query(Memory).filter(Memory.user_id==user_id).all()
@@ -28,25 +34,40 @@ def retrieve(user_id, query, top_k=3):
     scored=[]
     
     for mem in memories:
-        emb=np.array(json.loads(mem.embedding)).reshape(1,-1)
-        similarity=cosine_similarity(query_emb, emb)[0][0]
-        importance=apply_decay(mem)
-        
-        #Simple recency score
-        recency=1/(1+(datetime.now()-datetime.fromisoformat(mem.timestamp)).days)
-        
-        final_score=(0.6*similarity)+(0.3*importance)+(0.1*recency)
-        
+        emb = np.array(json.loads(mem.embedding)).reshape(1, -1)
+        similarity = cosine_similarity(query_emb, emb)[0][0]
+        importance = apply_decay(mem)
+
+        recency = 1 / (1 + (datetime.now() - datetime.fromisoformat(mem.timestamp)).days)
+
+        keyword_score = 0
+        query_keywords = extract_keywords(query)
+        for word in query_keywords:
+            mem_words = mem.text.lower().split()
+            if word in mem_words:
+                keyword_score += 0.1
+
+        final_score = (
+            0.5 * similarity +
+            0.3 * importance +
+            0.1 * recency +
+            0.1 * keyword_score
+        )
+
         scored.append((final_score, mem))
         
-    scored.sort(reverse=True, key=lambda x:x[0])
+    scored.sort(reverse=True, key=lambda x: x[0])
+
+    filtered = [(score, mem) for score, mem in scored if score > 0.5]
+
+    if not filtered:
+        db.close()
+        return []
+
+    top_results = filtered[:top_k]
     
-    filtered=[(score,mem) for score, mem in scored if score>0.3]
-    top_results=filtered[:top_k] if filtered else scored[:1]
     
-    
-    
-    #Reinforce access
+
     for _, mem in top_results:
         update_access(mem, db)
      
