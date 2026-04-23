@@ -1,6 +1,8 @@
 from groq import Groq
+from dotenv import dotenv_values
+config = dotenv_values(".env")
 
-client = Groq(api_key="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")
+client = Groq(api_key=config["GROQ_API_KEY"])
 
 def generate_llm_response(query: str) -> str:
     try:
