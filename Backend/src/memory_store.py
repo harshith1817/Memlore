@@ -11,7 +11,7 @@ from src.graph import build_graph
 from sklearn.metrics.pairwise import cosine_similarity
 
 nlp = spacy.load("en_core_web_sm")
-DUPLICATE_THRESHOLD = 0.88  # lower = catches more near-duplicates
+DUPLICATE_THRESHOLD = 0.75  # lower = catches more near-duplicates
 
 def calculate_importance(text):
     score = 0.5
@@ -24,17 +24,6 @@ def calculate_importance(text):
         pass
     return min(max(score, 0.1), 1.0)
 
-def is_past_tense(text):
-    """
-    Use SpaCy POS tagging to detect past tense.
-    Skip storing past tense facts — they may be outdated.
-    """
-    doc = nlp(text)
-    for token in doc:
-        # VBD = past tense verb, VBN = past participle
-        if token.tag_ in ("VBD", "VBN") and token.lemma_ not in ("be", "have", "do"):
-            return True
-    return False
 
 def is_duplicate(user_id, new_embedding, db):
     """Semantic duplicate detection using embeddings."""
@@ -62,11 +51,6 @@ def add_memory(user_id, text):
         db.close()
         return
 
-    # Skip past tense — outdated info
-    if is_past_tense(clean):
-        print(f"Skipping past tense: {clean}")
-        db.close()
-        return
 
     # Check exact duplicate
     existing = db.query(Memory).filter(

@@ -2,6 +2,7 @@ import json
 import numpy as np
 from datetime import datetime
 import nltk
+import spacy
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from src.embedder import get_embedding
@@ -11,6 +12,7 @@ from src.database import SessionLocal
 from src.graph import expand_query
 from sklearn.metrics.pairwise import cosine_similarity
 
+nlp = spacy.load("en_core_web_sm")
 nltk.download('stopwords', quiet=True)
 nltk.download('punkt', quiet=True)
 nltk.download('punkt_tab', quiet=True)
@@ -30,7 +32,17 @@ def extract_keywords(text):
     tokens = word_tokenize(text.lower())
     return [w for w in tokens if w.isalpha() and w not in STOPWORDS]
 
-def retrieve(user_id, query, top_k=3):
+
+def tokenize(text):
+    doc = nlp(text.lower())
+    return [
+        token.lemma_
+        for token in doc
+        if token.is_alpha and token.lemma_ not in ["be", "do", "have"]
+    ]
+    
+    
+def retrieve(user_id, query, top_k=2):
     expanded = expand_query(query)
     db = SessionLocal()
     memories = db.query(Memory).filter(Memory.user_id == user_id).all()
@@ -45,18 +57,20 @@ def retrieve(user_id, query, top_k=3):
         recency = 1 / (1 + (datetime.now() - datetime.fromisoformat(mem.timestamp)).days)
 
         # NLTK keyword matching
-        query_keywords = extract_keywords(query)
         keyword_score = 0
-        mem_words = word_tokenize(mem.text.lower())
+        query_keywords = tokenize(query)
+        mem_words = tokenize(mem.text)
         for word in query_keywords:
             if word in mem_words:
-                keyword_score += 0.1
+                keyword_score += 1
+        if len(query_keywords) > 0:
+            keyword_score = keyword_score / len(query_keywords)
 
         final_score = (
             0.5 * similarity +
-            0.3 * importance +
+            0.25 * importance +
             0.1 * recency +
-            0.1 * min(keyword_score, 1.0)  # cap at 1.0
+            0.25 * keyword_score
         )
 
         scored.append((final_score, mem))

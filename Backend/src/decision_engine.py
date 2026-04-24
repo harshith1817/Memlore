@@ -3,7 +3,6 @@ import random
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import sent_tokenize, word_tokenize
-from textblob import TextBlob
 from rapidfuzz import fuzz
 from src.retriever import retrieve
 from src.llm import generate_llm_response
@@ -17,7 +16,7 @@ nltk.download('punkt_tab', quiet=True)
 
 STOPWORDS = set(stopwords.words('english'))
 THRESHOLD = 0.45
-QUESTION_WORDS = ["what", "who", "where", "when", "why", "how", "which", "whose"]
+QUESTION_WORDS = []
 PERSONAL_WORDS = {"my", "i", "me", "mine", "our"}
 
 GREETINGS = {
@@ -62,8 +61,39 @@ def get_intent(text):
     return None
 
 def is_query(text):
-    text = text.strip().lower().rstrip("?")
-    return any(text.startswith(q) for q in QUESTION_WORDS)
+    text = text.lower().strip()
+    words = text.split()
+
+    if not words:
+        return False
+
+    # 1. Question mark
+    if text.endswith("?"):
+        return True
+
+    # 2. WH words
+    wh_words = ["what", "who", "where", "when", "why", "how", "which", "whose"]
+    if words[0] in wh_words:
+        return True
+
+    # 3. Auxiliary verbs
+    aux_verbs = [
+        "do", "does", "did",
+        "is", "am", "are",
+        "was", "were",
+        "can", "could",
+        "will", "would",
+        "have", "has", "had"
+    ]
+    if words[0] in aux_verbs:
+        return True
+
+    # 4. Command-style queries
+    command_words = ["tell", "give", "show", "list", "find", "get"]
+    if words[0] in command_words:
+        return True
+
+    return False
 
 def is_personal_query(text):
     words = text.lower().split()
@@ -156,8 +186,14 @@ def answer(query, user_id):
 
     if is_query(query):
         # Non-personal → straight to LLM
-        if not is_personal_query(query):
-            return generate_llm_response(query)
+        # 1. Try DB first
+        results = retrieve(user_id, query)
+
+        if results:
+            top_score, top_text = results[0]
+
+            if top_score > THRESHOLD:
+                return f"You told me that {format_memory_response(top_text)}"
 
         # Personal → check memory first
         results = retrieve(user_id, query)
@@ -184,6 +220,6 @@ def answer(query, user_id):
             stored_count += 1
 
     if stored_count > 0:
-        return f"Got it! I've stored {stored_count} thing(s) from what you told me."
+        return f"Got it! I've stored that."
 
     return generate_llm_response(query)
