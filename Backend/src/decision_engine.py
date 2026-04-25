@@ -220,11 +220,8 @@ def answer(query, user_id):
 
         if is_broad_query(query):
             results = retrieve(user_id, query, top_k=5)
-
-            # if not results:
-            #     return generate_llm_response(query)
     
-            # 🔥 fallback: if retriever still fails → fetch raw memory
+            # fallback: if retriever still fails → fetch raw memory
             if not results:
                 from src.database import SessionLocal
                 from src.models import Memory
@@ -253,7 +250,7 @@ def answer(query, user_id):
 
         top_score = results[0][0]
 
-        # 🔥 Dynamic gap
+        # Dynamic gap
         gap = 0.1 if top_score > 0.7 else 0.05
 
         filtered = [
@@ -267,7 +264,7 @@ def answer(query, user_id):
             for score, text in filtered
         ]
 
-        # 🔥 No strong match → fallback or best guess
+        # No strong match → fallback or best guess
         if not good_results:
             if top_score < 0.45:
                 return generate_llm_response(query)

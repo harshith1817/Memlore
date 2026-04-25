@@ -11,6 +11,8 @@ from src.memory_store import update_access
 from src.database import SessionLocal
 from src.graph import expand_query
 from sklearn.metrics.pairwise import cosine_similarity
+from sqlalchemy import DateTime
+
 
 nlp = spacy.load("en_core_web_sm")
 nltk.download('stopwords', quiet=True)
@@ -20,12 +22,18 @@ nltk.download('punkt_tab', quiet=True)
 STOPWORDS = set(stopwords.words('english'))
 
 def apply_decay(memory):
-    last = datetime.fromisoformat(memory.last_accessed)
     now = datetime.now()
+    if isinstance(memory.last_accessed, str):
+        last = datetime.fromisoformat(memory.last_accessed)
+    elif isinstance(memory.last_accessed, datetime):
+        last = memory.last_accessed
+    else:
+        last = now
     days = (now - last).days
     decay = 0.01 * days
     memory.importance -= decay
     return max(memory.importance, 0.1)
+
 
 def extract_keywords(text):
     """NLTK-based keyword extraction — much better than manual."""
@@ -54,7 +62,7 @@ def retrieve(user_id, query, top_k=3):
     query_emb = get_embedding(expanded).reshape(1, -1)
     query_keywords = tokenize(query)
 
-    is_broad = len(query_keywords) == 0   # 🔥 key fix
+    is_broad = len(query_keywords) == 0   # key fix
 
     scored = []
 
@@ -62,12 +70,21 @@ def retrieve(user_id, query, top_k=3):
         emb = np.array(json.loads(mem.embedding)).reshape(1, -1)
         similarity = cosine_similarity(query_emb, emb)[0][0]
 
-        # 🔥 adaptive filtering
+        # adaptive filtering
         if not is_broad and similarity < 0.3:
             continue
 
         importance = apply_decay(mem)
-        recency = 1 / (1 + (datetime.now() - datetime.fromisoformat(mem.timestamp)).days)
+        now = datetime.now()
+
+        if isinstance(mem.timestamp, str):
+            ts = datetime.fromisoformat(mem.timestamp)
+        elif isinstance(mem.timestamp, datetime):
+            ts = mem.timestamp
+        else:
+            ts = now
+
+        recency = 1 / (1 + (now - ts).days)
 
         mem_words = tokenize(mem.text)
         overlap = sum(1 for w in query_keywords if w in mem_words)

@@ -95,12 +95,16 @@ function Signup() {
     }
 
     try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/signup?email=${email}&password=${password}`,
-        {
-          method: "POST",
-        }
-      );
+      const res = await fetch("http://127.0.0.1:8000/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
 
       const data = await res.json();
 
@@ -108,10 +112,10 @@ function Signup() {
         alert("Account created successfully!");
         navigate("/");
       } else {
-        alert(data.error || "Signup failed");
+        alert(data.detail || "Signup failed");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Signup error:", err);
     }
   };
 

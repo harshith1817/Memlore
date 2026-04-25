@@ -1,6 +1,5 @@
 import spacy
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 import nltk
 
 nltk.download('stopwords', quiet=True)

@@ -104,33 +104,36 @@ function Login(){
         if (e.key === "Enter") login();
     };
 
-    const login=async()=>{
-        setError("");
+    const login = async () => {
+    if (!email || !password) {
+        alert("Please fill all fields");
+        return;
+    }
 
-        if(!email || !password){
-            setError("Please fill all fields");
-            return;
+    try {
+        const res = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            email: email,
+            password: password,
+        }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.access_token) {
+        alert("Login successful!");
+        localStorage.setItem("token", data.access_token);
+        navigate("/chat");   // or wherever
+        } else {
+        setError(data.detail || data.error || "Login failed");
         }
-        try{
-            const res=await fetch(
-                `http://127.0.0.1:8000/login?email=${email}&password=${password}`,
-                {
-                    method: "POST",
-                }
-            );
-
-            const data=await res.json();
-
-            if(res.ok && data.access_token){
-                localStorage.setItem("token", data.access_token);
-                navigate("/chat");
-            }else{
-                setError("Invalid Credentials!");
-            }
-        }catch(err){
-            console.error(err);
-            setError("Server error. Please try again.")
-        }
+    } catch (err) {
+        console.error(err);
+    }
     };
 
     return(

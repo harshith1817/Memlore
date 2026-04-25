@@ -1,14 +1,12 @@
-# test_runner.py
-
 from src.decision_engine import answer
 from src.retriever import retrieve
 from src.database import SessionLocal
 from src.models import Memory
 
 
-user_id = "harsh1@gmail.com"
+user_id = "test@gmail.com"
 
-# 🔥 Step 1: Reset user memory (optional but recommended for testing)
+# Step 1: Reset user memory (optional but recommended for testing)
 def reset_memory(user_id):
     db = SessionLocal()
     db.query(Memory).filter(Memory.user_id == user_id).delete()
@@ -16,7 +14,7 @@ def reset_memory(user_id):
     db.close()
 
 
-# 🔥 Step 2: Store test data (same as webpage input)
+# Step 2: Store test data (same as webpage input)
 def setup_user(user_id):
     data = """
     My name is Harsh. I am 23 years old and I live in Hyderabad. 
@@ -41,7 +39,7 @@ def setup_user(user_id):
     answer(data, user_id)
 
 
-# 🔥 Step 3: Debug memory (to verify data is stored)
+# Step 3: Debug memory (to verify data is stored)
 def print_memory(user_id):
     db = SessionLocal()
     mems = db.query(Memory).filter(Memory.user_id == user_id).all()
@@ -53,7 +51,7 @@ def print_memory(user_id):
     db.close()
 
 
-# 🔥 Step 4: Test queries
+# Step 4: Test queries
 queries = [
     # Basic
     "What is my name",
@@ -132,9 +130,9 @@ def run_tests():
         print("-" * 60)
 
 
-# 🔥 MAIN EXECUTION
+# MAIN EXECUTION
 if __name__ == "__main__":
-    print("\n🚀 Running Memory System Test...\n")
+    print("\n Running Memory System Test...\n")
 
     reset_memory(user_id)      # optional (clean slate)
     setup_user(user_id)        # store data
