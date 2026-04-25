@@ -15,7 +15,7 @@ nltk.download('punkt', quiet=True)
 nltk.download('punkt_tab', quiet=True)
 
 STOPWORDS = set(stopwords.words('english'))
-THRESHOLD = 0.45
+THRESHOLD = 0.55
 QUESTION_WORDS = []
 PERSONAL_WORDS = {"my", "i", "me", "mine", "our"}
 
@@ -147,6 +147,16 @@ def format_memory_response(text):
     doc = nlp(text)
     tokens = []
     
+    text = text.strip()
+
+    if not text.startswith("you"):
+        text = "you " + text
+
+    text = text[0].upper() + text[1:]
+
+    if not text.endswith("."):
+        text += "."
+        
     for token in doc:
         word = token.text.lower()
         if word == "i" and token.pos_ == "PRON":
@@ -169,7 +179,18 @@ def format_memory_response(text):
     return result.strip().capitalize()
 
 
+def is_broad_query(query):
+    query = query.lower()
 
+    intent_words = {"tell", "know", "describe", "summarize", "list", "show"}
+    personal_words = {"me", "my", "myself", "mine"}
+
+    tokens = query.split()
+
+    has_intent = any(w in tokens for w in intent_words)
+    has_personal = any(w in tokens for w in personal_words)
+
+    return has_intent and has_personal
 
 def answer(query, user_id):
     query = query.strip()
@@ -183,33 +204,80 @@ def answer(query, user_id):
 
     if is_incomplete(query):
         return "Can you tell me more?"
+    
+    if " and " in query and is_query(query):
+        parts = query.split(" and ")
+        responses = []
+
+        for part in parts:
+            res = answer(part.strip(), user_id)
+            responses.append(res)
+
+        return " ".join(responses)
+    
 
     if is_query(query):
-        # Non-personal → straight to LLM
-        # 1. Try DB first
-        results = retrieve(user_id, query)
 
-        if results:
-            top_score, top_text = results[0]
+        if is_broad_query(query):
+            results = retrieve(user_id, query, top_k=5)
 
-            if top_score > THRESHOLD:
-                return f"You told me that {format_memory_response(top_text)}"
+            # if not results:
+            #     return generate_llm_response(query)
+    
+            # 🔥 fallback: if retriever still fails → fetch raw memory
+            if not results:
+                from src.database import SessionLocal
+                from src.models import Memory
 
-        # Personal → check memory first
-        results = retrieve(user_id, query)
-        if results:
-            good_results = [
+                db = SessionLocal()
+                memories = db.query(Memory).filter(Memory.user_id == user_id).all()
+                db.close()
+
+                if not memories:
+                    return generate_llm_response(query)
+
+                # take last few memories
+                results = [(1.0, mem.text) for mem in memories[-5:]]
+
+            responses = [
                 format_memory_response(text)
-                for score, text in results
-                if score > THRESHOLD
+                for _, text in results
             ]
-            if good_results:
-                if len(good_results) == 1:
-                    return f"Based on what you told me: {good_results[0]}"
-                else:
-                    combined = ", ".join(good_results)
-                    return f"Based on what you told me: {combined}"
-        return generate_llm_response(query)
+
+            return "Here's what I know: " + ", ".join(responses)
+        
+        results = retrieve(user_id, query)
+        
+        if not results:
+            return generate_llm_response(query)
+
+        top_score = results[0][0]
+
+        # 🔥 Dynamic gap
+        gap = 0.1 if top_score > 0.7 else 0.05
+
+        filtered = [
+            (score, text)
+            for score, text in results
+            if score >= top_score - gap
+        ]
+
+        good_results = [
+            format_memory_response(text)
+            for score, text in filtered
+        ]
+
+        # 🔥 No strong match → fallback or best guess
+        if not good_results:
+            if top_score < 0.45:
+                return generate_llm_response(query)
+
+            return f"You told me that {format_memory_response(results[0][1])}"
+
+        if len(good_results) == 1:
+            return f"You told me that {good_results[0]}"
+
+        return "Based on what you told me: " + ", ".join(good_results)
 
     # Statement — split and store
     sentences = split_into_sentences(query)
@@ -220,6 +288,6 @@ def answer(query, user_id):
             stored_count += 1
 
     if stored_count > 0:
-        return f"Got it! I've stored that."
+        return f"Got it! I've stored everything you told me."
 
     return generate_llm_response(query)

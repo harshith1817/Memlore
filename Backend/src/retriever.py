@@ -42,51 +42,55 @@ def tokenize(text):
     ]
     
     
-def retrieve(user_id, query, top_k=2):
+def retrieve(user_id, query, top_k=3):
     expanded = expand_query(query)
     db = SessionLocal()
     memories = db.query(Memory).filter(Memory.user_id == user_id).all()
 
+    if not memories:
+        db.close()
+        return []
+
     query_emb = get_embedding(expanded).reshape(1, -1)
+    query_keywords = tokenize(query)
+
+    is_broad = len(query_keywords) == 0   # 🔥 key fix
+
     scored = []
 
     for mem in memories:
         emb = np.array(json.loads(mem.embedding)).reshape(1, -1)
         similarity = cosine_similarity(query_emb, emb)[0][0]
+
+        # 🔥 adaptive filtering
+        if not is_broad and similarity < 0.3:
+            continue
+
         importance = apply_decay(mem)
         recency = 1 / (1 + (datetime.now() - datetime.fromisoformat(mem.timestamp)).days)
 
-        # NLTK keyword matching
-        keyword_score = 0
-        query_keywords = tokenize(query)
         mem_words = tokenize(mem.text)
-        for word in query_keywords:
-            if word in mem_words:
-                keyword_score += 1
-        if len(query_keywords) > 0:
-            keyword_score = keyword_score / len(query_keywords)
+        overlap = sum(1 for w in query_keywords if w in mem_words)
+
+        keyword_score = overlap / len(query_keywords) if query_keywords else 0
 
         final_score = (
-            0.5 * similarity +
-            0.25 * importance +
+            0.7 * similarity +
+            0.15 * importance +
             0.1 * recency +
-            0.25 * keyword_score
+            0.05 * keyword_score
         )
 
         scored.append((final_score, mem))
 
     scored.sort(reverse=True, key=lambda x: x[0])
-    filtered = [(score, mem) for score, mem in scored if score > 0.45]
 
-    if not filtered:
-        db.close()
-        return []
-
-    top_results = filtered[:top_k]
+    top_results = scored[:top_k]
 
     for _, mem in top_results:
         update_access(mem, db)
 
     results = [(score, mem.text) for score, mem in top_results]
+
     db.close()
     return results
