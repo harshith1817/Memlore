@@ -1,8 +1,16 @@
 from groq import Groq
-from dotenv import dotenv_values
-config = dotenv_values(".env")
+from dotenv import load_dotenv
+import os
 
-client = Groq(api_key=config["GROQ_API_KEY"])
+load_dotenv()
+
+api_key = os.getenv("GROQ_API_KEY")
+
+if not api_key:
+    raise ValueError("GROQ_API_KEY is missing")
+print("DEBUG KEY:", repr(os.getenv("GROQ_API_KEY")))
+
+client = Groq(api_key=api_key)
 
 def generate_llm_response(query: str) -> str:
     try:

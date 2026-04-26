@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState} from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 
 const Container = styled.div`
   height: 100vh;
@@ -13,7 +14,7 @@ const Container = styled.div`
 
 const Card = styled.div`
   width: 25%;
-  height: 55%;
+  height: 62.5%;
   background: #1e293b;
   padding: 30px;
   border-radius: 12px;
@@ -67,7 +68,7 @@ const LinkSpan = styled.span`
 `;
 
 const FieldDiv = styled.div`
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.3rem;
 `;
 
 const HeadDiv = styled.div`
@@ -83,6 +84,26 @@ const Text = styled.p`
   margin-bottom: 0.3rem;
 `;
 
+const Google=styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  font-weight: 1rem;
+`;
+
+const Github=styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  margin-top: 1rem;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  font-weight: 1rem;
+`;
+
+
 function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -95,7 +116,7 @@ function Signup() {
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/signup", {
+      const res = await fetch("http://localhost:8000/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,6 +148,13 @@ function Signup() {
         <HeadDiv>
           <h2>Signup</h2>
         </HeadDiv>
+        <Google onClick={() => {
+          window.location.href = "http://localhost:8000/auth/google";
+        }}><FaGoogle/> Continue with Google</Google>
+
+        <Github onClick={() => {
+          window.location.href = "http://localhost:8000/auth/github";
+        }}><FaGithub/> Continue with Github</Github>
 
         <FieldDiv>
           <Text>Email address</Text>

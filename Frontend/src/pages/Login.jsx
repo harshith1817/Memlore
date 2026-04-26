@@ -1,6 +1,7 @@
 import React, {useState} from "react";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { FaGoogle, FaGithub } from "react-icons/fa";
 
 const Container = styled.div`
   height: 100vh;
@@ -13,7 +14,7 @@ const Container = styled.div`
 
 const Card = styled.div`
   width: 25%;
-  height: 55%;
+  height: 62.5%;
   background: #1e293b;
   padding: 30px;
   border-radius: 12px;
@@ -94,6 +95,26 @@ const ErrorText = styled.p`
   flex-direction: column;
 `;
 
+const Google=styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  margin-top: 1rem;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  font-weight: 1rem;
+`;
+
+const Github=styled.button`
+  width: 100%;
+  padding: 12px;
+  border: none;
+  margin-top: 1rem;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  font-weight: 1rem;
+`;
+
 function Login(){
     const[email, setEmail]=useState("");
     const[password, setPassword]=useState("");
@@ -111,7 +132,7 @@ function Login(){
     }
 
     try {
-        const res = await fetch("http://127.0.0.1:8000/login", {
+        const res = await fetch("http://localhost:8000/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -144,7 +165,6 @@ function Login(){
                     <h2>Login</h2>
                 </HeadDiv>
                 
-
                 <EmailDiv>
                 <Text>Email address</Text>
                 <InputDiv
@@ -171,6 +191,13 @@ function Login(){
 
                 <Button onClick={login}>Log In</Button>
                 
+                <Google onClick={() => {
+                  window.location.href = "http://localhost:8000/auth/google";
+                }}><FaGoogle/> Continue with Google</Google>
+
+                <Github onClick={() => {
+                  window.location.href = "http://localhost:8000/auth/github";
+                }}><FaGithub/> Continue with Github</Github>
                 <LinkText>
                     Don't have an account?{" "}
                     <LinkSpan onClick={()=>navigate("/signup")}>

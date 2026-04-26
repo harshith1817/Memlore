@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Header, Depends, HTTPException
+from fastapi import APIRouter, Header, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from src.memory_store import add_memory
 from src.decision_engine import answer
 from src.auth import hash_password, verify_password, create_token, decode_token
+from src.oauth import oauth
 from src.models import User
 from src.database import SessionLocal
 from pydantic import BaseModel
@@ -63,3 +65,97 @@ def add_memory_api(text: str, user_id: str = Depends(get_current_user)):
 def query_api(q: str, user_id: str = Depends(get_current_user)):
     results=answer(q, user_id)
     return {"response": results}
+
+
+@router.get("/auth/google")
+async def google_login(request: Request):
+    redirect_uri = "http://localhost:8000/auth/google/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/auth/google/callback")
+async def google_callback(request: Request):
+    db = SessionLocal()
+
+    token = await oauth.google.authorize_access_token(request)
+
+    resp = await oauth.google.get(
+        "https://www.googleapis.com/oauth2/v2/userinfo",
+        token=token
+    )
+
+    user_info = resp.json()
+    email = user_info.get("email")
+
+    if not email:
+        db.close()
+        raise HTTPException(status_code=400, detail="Email not found")
+
+    # check if user exists
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        user = User(
+            id=email,
+            email=email,
+            password="oauth"   # placeholder
+        )
+        db.add(user)
+        db.commit()
+
+    # create your JWT
+    jwt_token = create_token({"user_id": user.id})
+
+    db.close()
+
+    # redirect to frontend with token
+    return RedirectResponse(
+        url=f"http://localhost:3000/oauth-success?token={jwt_token}"
+    )
+    
+
+@router.get("/auth/github")
+async def github_login(request: Request):
+    redirect_uri = "http://localhost:8000/auth/github/callback"
+    return await oauth.github.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/auth/github/callback")
+async def github_callback(request: Request):
+    db = SessionLocal()
+
+    token = await oauth.github.authorize_access_token(request)
+
+    resp = await oauth.github.get("user", token=token)
+    user_info = resp.json()
+
+    email = user_info.get("email")
+
+    # ⚠️ GitHub may NOT return email directly
+    if not email:
+        emails_resp = await oauth.github.get("user/emails", token=token)
+        emails = emails_resp.json()
+        email = next((e["email"] for e in emails if e["primary"]), None)
+
+    if not email:
+        db.close()
+        raise HTTPException(status_code=400, detail="Email not found")
+
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        user = User(
+            id=email,
+            email=email,
+            password="oauth"
+        )
+        db.add(user)
+        db.commit()
+
+    jwt_token = create_token({"user_id": user.id})
+
+    db.close()
+
+    return RedirectResponse(
+        url=f"http://localhost:3000/oauth-success?token={jwt_token}"
+    )
