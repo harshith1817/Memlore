@@ -4,13 +4,13 @@ from src.memory_store import add_memory
 from src.decision_engine import answer
 from src.auth import hash_password, verify_password, create_token, decode_token
 from src.oauth import oauth
-from src.models import User
+from src.models import User, Memory
 from src.database import SessionLocal
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 router=APIRouter()
 class SignupRequest(BaseModel):
-    email: str
+    email: EmailStr
     password: str
     
 @router.post("/signup")
@@ -19,7 +19,7 @@ def signup(data: SignupRequest):
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         db.close()
-        return {"error": "User already exists"}
+        raise HTTPException(status_code=400, detail="User already exists")
     user = User(
         id=data.email,
         email=data.email,
@@ -39,15 +39,28 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 def login(data: LoginRequest):
     db = SessionLocal()
+
     user = db.query(User).filter(User.email == data.email).first()
+
     if not user:
         db.close()
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="User not found!")
+
+    if user.password is None:
+        user.password = hash_password(data.password)
+        db.commit()
+
+        token = create_token({"user_id": user.id})
+        db.close()
+        return {"access_token": token}
+
     if not verify_password(data.password, user.password):
         db.close()
-        raise HTTPException(status_code=401, detail="Wrong password")
+        raise HTTPException(status_code=401, detail="Enter a valid password")
+
     token = create_token({"user_id": user.id})
     db.close()
+
     return {"access_token": token}
 
 
@@ -98,17 +111,15 @@ async def google_callback(request: Request):
         user = User(
             id=email,
             email=email,
-            password="oauth"   # placeholder
+            password=None
         )
         db.add(user)
         db.commit()
 
-    # create your JWT
     jwt_token = create_token({"user_id": user.id})
 
     db.close()
 
-    # redirect to frontend with token
     return RedirectResponse(
         url=f"http://localhost:3000/oauth-success?token={jwt_token}"
     )
@@ -131,7 +142,6 @@ async def github_callback(request: Request):
 
     email = user_info.get("email")
 
-    # ⚠️ GitHub may NOT return email directly
     if not email:
         emails_resp = await oauth.github.get("user/emails", token=token)
         emails = emails_resp.json()
@@ -147,7 +157,7 @@ async def github_callback(request: Request):
         user = User(
             id=email,
             email=email,
-            password="oauth"
+            password=None
         )
         db.add(user)
         db.commit()
@@ -159,3 +169,15 @@ async def github_callback(request: Request):
     return RedirectResponse(
         url=f"http://localhost:3000/oauth-success?token={jwt_token}"
     )
+    
+
+@router.delete("/clear-memory")
+def clear_memory(user_id: str = Depends(get_current_user)):
+    db = SessionLocal()
+
+    deleted=db.query(Memory).filter(Memory.user_id == user_id).delete()
+
+    db.commit()
+    db.close()
+
+    return {"status": "cleared", "deleted": deleted}

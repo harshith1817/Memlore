@@ -6,7 +6,6 @@ from src.models import Memory
 
 user_id = "test@gmail.com"
 
-# Step 1: Reset user memory (optional but recommended for testing)
 def reset_memory(user_id):
     db = SessionLocal()
     db.query(Memory).filter(Memory.user_id == user_id).delete()
@@ -14,7 +13,6 @@ def reset_memory(user_id):
     db.close()
 
 
-# Step 2: Store test data (same as webpage input)
 def setup_user(user_id):
     data = """
     My name is Harsh. I am 23 years old and I live in Hyderabad. 
@@ -39,12 +37,11 @@ def setup_user(user_id):
     answer(data, user_id)
 
 
-# Step 3: Debug memory (to verify data is stored)
 def print_memory(user_id):
     db = SessionLocal()
     mems = db.query(Memory).filter(Memory.user_id == user_id).all()
 
-    print(f"\n📦 Stored Memories ({len(mems)}):\n")
+    print(f"\nStored Memories ({len(mems)}):\n")
     for m in mems:
         print(f"- {m.text}")
 
@@ -118,23 +115,20 @@ def run_tests():
     for i, q in enumerate(queries, 1):
         print(f"\n{i:02d}. Q: {q}")
 
-        # 🔍 Show retrieval debug
         results = retrieve(user_id, q)
         print("   🔎 Top Matches:")
         for score, text in results:
             print(f"      {round(score, 3)} → {text}")
 
-        # 🤖 Final answer
         res = answer(q, user_id)
         print(f"   💬 A: {res}")
         print("-" * 60)
 
 
-# MAIN EXECUTION
 if __name__ == "__main__":
     print("\n Running Memory System Test...\n")
 
-    reset_memory(user_id)      # optional (clean slate)
-    setup_user(user_id)        # store data
-    print_memory(user_id)      # verify storage
-    run_tests()                # run queries
+    reset_memory(user_id)    
+    setup_user(user_id)    
+    print_memory(user_id)     
+    run_tests()              

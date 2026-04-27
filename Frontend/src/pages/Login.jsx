@@ -14,7 +14,7 @@ const Container = styled.div`
 
 const Card = styled.div`
   width: 25%;
-  height: 62.5%;
+  height: 67.5%;
   background: #1e293b;
   padding: 30px;
   border-radius: 12px;
@@ -87,19 +87,16 @@ const Text=styled.p`
 `;
 
 const ErrorText = styled.p`
-  color: #f87171;
-  margin-top: 8px;
+  font-size: 0.9rem;
+  margin: 6px 0;
+  text-align: center;
   font-size: 1rem;
-    display: flex;
-  align-items: center;
-  flex-direction: column;
 `;
 
 const Google=styled.button`
   width: 100%;
   padding: 12px;
   border: none;
-  margin-top: 1rem;
   border-radius: 0.7rem;
   cursor: pointer;
   font-weight: 1rem;
@@ -115,11 +112,33 @@ const Github=styled.button`
   font-weight: 1rem;
 `;
 
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 1.2rem 0;
+`;
+
+const Line = styled.div`
+  flex: 1;
+  height: 1px;
+  background: #475569;
+  opacity: 0.5;
+`;
+
+const OrText = styled.span`
+  margin: 0 12px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  letter-spacing: 1px;
+`;
+
 function Login(){
     const[email, setEmail]=useState("");
     const[password, setPassword]=useState("");
-    const[error, setError]=useState("");
     const navigate=useNavigate();
+    const [serverMsg, setServerMsg] = useState("");
+    const [error, setError] = useState("");
+    const [isError, setIsError] = useState(false);
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter") login();
@@ -127,7 +146,8 @@ function Login(){
 
     const login = async () => {
     if (!email || !password) {
-        alert("Please fill all fields");
+        setServerMsg("Please fill all fields");
+        setIsError(true);
         return;
     }
 
@@ -145,13 +165,20 @@ function Login(){
 
         const data = await res.json();
 
-        if (res.ok && data.access_token) {
-        alert("Login successful!");
+      if (res.ok && data.access_token) {
+        setServerMsg("Login successful!");
+        setIsError(false);
+
         localStorage.setItem("token", data.access_token);
-        navigate("/chat");   // or wherever
-        } else {
-        setError(data.detail || data.error || "Login failed");
-        }
+
+        setTimeout(() => {
+          navigate("/chat");
+        }, 1200);
+
+      } else {
+        setServerMsg(data.detail || data.error || "Login failed");
+        setIsError(true);
+      }
     } catch (err) {
         console.error(err);
     }
@@ -186,18 +213,28 @@ function Login(){
                     onKeyDown={handleKeyDown}
                 />
                 </PasswordDiv>
-                
-                {error && <ErrorText>{error}</ErrorText>}
+
+                {serverMsg && (
+                  <ErrorText style={{ color: isError ? "#f87171" : "#22c55e" }}>
+                    {serverMsg}
+                  </ErrorText>
+                )}
 
                 <Button onClick={login}>Log In</Button>
+
+                <Divider>
+                  <Line />
+                  <OrText>OR</OrText>
+                  <Line />
+                </Divider>
                 
                 <Google onClick={() => {
                   window.location.href = "http://localhost:8000/auth/google";
-                }}><FaGoogle/> Continue with Google</Google>
+                }}><FaGoogle size={15}/> Continue with Google</Google>
 
                 <Github onClick={() => {
                   window.location.href = "http://localhost:8000/auth/github";
-                }}><FaGithub/> Continue with Github</Github>
+                }}><FaGithub size={15}/> Continue with Github</Github>
                 <LinkText>
                     Don't have an account?{" "}
                     <LinkSpan onClick={()=>navigate("/signup")}>

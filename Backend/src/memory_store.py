@@ -11,7 +11,7 @@ from src.graph import build_graph
 from sklearn.metrics.pairwise import cosine_similarity
 
 nlp = spacy.load("en_core_web_sm")
-DUPLICATE_THRESHOLD = 0.75  # lower = catches more near-duplicates
+DUPLICATE_THRESHOLD = 0.75
 
 def calculate_importance(text):
     score = 0.5

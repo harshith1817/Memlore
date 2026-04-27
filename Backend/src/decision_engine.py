@@ -51,7 +51,7 @@ def get_intent(text):
         return "greeting"
     if text in FAREWELLS:
         return "farewell"
-    # Fuzzy match for close greetings like "heyy", "helloo"
+    
     for g in GREETINGS:
         if fuzz.ratio(text, g) > 85:
             return "greeting"
@@ -89,7 +89,7 @@ def is_query(text):
         return True
 
     # 4. Command-style queries
-    command_words = ["tell", "give", "show", "list", "find", "get"]
+    command_words = ["tell", "give", "show", "list", "find", "get", "summarize", "about"]
     if words[0] in command_words:
         return True
 
@@ -135,8 +135,6 @@ def split_into_sentences(text):
         # Split on conjunctions
         parts = re.split(r'\band\b|\bbut\b|\balso\b', sentence, flags=re.IGNORECASE)
         for part in parts:
-            # Further split on "I + verb" pattern for unpunctuated text
-            # "My name is Harsh I am 23" → ["My name is Harsh", "I am 23"]
             sub_parts = re.split(r'(?<!\w)\s+(?=I\s+(?:am|work|live|love|like|enjoy|have|do|study|use|play|watch))', part, flags=re.IGNORECASE)
             result.extend(sub_parts)
     

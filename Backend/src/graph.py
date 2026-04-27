@@ -47,6 +47,6 @@ def expand_query(query):
     related = []
     for c in concepts:
         if c in graph:
-            related.extend(list(graph[c])[:3])  # limit to 3 related per concept
+            related.extend(list(graph[c])[:3])
     expanded = query + " " + " ".join(set(related))
     return expanded.strip()

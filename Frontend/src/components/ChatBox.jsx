@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import styled from "styled-components";
 import { IoSend } from "react-icons/io5";
 import "./ChatBox.css"
+import userImg from "./user.png";
 
 const Container = styled.div`
   height: 100vh;
@@ -29,7 +30,6 @@ const BotBubble = styled.div`
     word-wrap: break-word;
     font-size: 1rem;
     text-align: left;
-
 `;
 
 const UserBubble = styled.div`
@@ -77,6 +77,7 @@ const SendButton = styled.button`
 const Title = styled.h1`
   text-align: center;
   color: #38bdf8;
+  margin: 0;
 `;
 
 const ChatFooter = styled.div`
@@ -87,6 +88,7 @@ const ChatFooter = styled.div`
 `;
 
 const ChatWindow = styled.div`
+  position: relative;
   width: 50%;
   height: 80vh;
   padding-top: 0.5rem;
@@ -136,55 +138,146 @@ const Suggestion = styled.button`
   }
 `;
 
+const OptionsDiv = styled.div``;
+
+const ImageDiv = styled.div`
+  position: absolute;
+  top: 0;
+  right: 1rem;
+`;
+
+const HeaderContainer = styled.div`
+  width: 50%;
+  position: relative;
+  margin-bottom: 10px;
+`;
+
 function ChatBox(){
     const [messages, setMessages]=useState([]);
     const [input, setInput]=useState("");
+    const [open, setOpen] = useState(false);
+
+    const sendDirectMessage = async (text) => {
+    if (!text) return;
+
+    setMessages(prev => [
+        ...prev,
+        { type: "user", text }
+    ]);
+
+    try {
+        const res = await fetch(
+            `http://127.0.0.1:8000/query?q=${encodeURIComponent(text)}`,
+            {
+                headers: {
+                    token: localStorage.getItem("token"),
+                },
+            }
+        );
+
+        const data = await res.json();
+
+        setMessages(prev => [
+            ...prev,
+            { type: "bot", text: data.response }
+        ]);
+
+    } catch (err) {
+        console.error(err);
+    }
+    };
+
     const handleSuggestion = (text) => {
-    setInput(text);
-    setTimeout(() => sendMessage(), 100);
+        sendDirectMessage(text);
     };
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter") sendMessage();
     };
 
-    const sendMessage=async()=>{
-        if(!input) return;
+    const sendMessage = () => {
+    if (!input) return;
 
-        const userMessage=input;
+    const userMessage = input;
+    setInput("");
 
-        setMessages(prev=>[
-            ...prev,
-            {type: "user", text: userMessage}
-        ]);
-
-        setInput("");
-
-        try{
-            const res=await fetch(
-                `http://127.0.0.1:8000/query?q=${input}`,
-                {
-                    headers:{
-                        token: localStorage.getItem("token"),
-                    },
-                }
-            );
-
-            const data=await res.json();
-
-            setMessages(prev => [
-            ...prev,
-            { type: "bot", text: data.response }
-            ]);
-
-        }catch (err){
-            console.error(err);
-        }
+    sendDirectMessage(userMessage);
     };
 
     return(
         <Container>
-            <Title>Memlore AI</Title>
+            <HeaderContainer>
+                <Title>Memlore AI</Title>
+
+                <ImageDiv>
+                    <OptionsDiv
+                        onClick={() => setOpen(!open)}
+                        onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
+                        onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                        style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            transition: "0.2s"
+                        }}
+                    >
+                        <img
+                            src={userImg}
+                            alt="user"
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover"
+                            }}
+                        />
+                    </OptionsDiv>
+
+                    {open && (
+                        <div
+                            style={{
+                                position: "absolute",
+                                top: "50px",
+                                right: "0",
+                                background: "#1e293b",
+                                borderRadius: "8px",
+                                padding: "10px",
+                                width: "150px",
+                                zIndex: 1000
+                            }}
+                        >
+                            <div
+                                style={{ padding: "10px", color: "#e2e8f0", cursor: "pointer" }}
+                                onClick={() => {
+                                    localStorage.removeItem("token");
+                                    window.location.href = "/";
+                                }}
+                            >
+                                Logout
+                            </div>
+
+                            <div
+                                style={{ padding: "10px", color: "#e2e8f0", cursor: "pointer" }}
+                                onClick={async () => {
+                                    const confirm = window.confirm("Delete all memories?");
+                                    if (!confirm) return;
+
+                                    await fetch("http://localhost:8000/clear-memory", {
+                                        method: "DELETE",
+                                        headers: {
+                                            token: localStorage.getItem("token"),
+                                        },
+                                    });
+                                }}
+                            >
+                                Clear Memory
+                            </div>
+                        </div>
+                    )}
+                </ImageDiv>
+            </HeaderContainer>
+
             <ChatWindow>
                 <MessageContainer>
                 {messages.length === 0 ? (
@@ -213,13 +306,14 @@ function ChatBox(){
                         <Message key={i} isUser={m.type==="user"}>
                             {m.type==="user" ? (
                                 <UserBubble>{m.text}</UserBubble>
-                            ):(
+                            ) : (
                                 <BotBubble>{m.text}</BotBubble>
                             )}
                         </Message>
                     ))
                 )}
                 </MessageContainer>
+
                 <ChatFooter>
                     <InputContainer>
                         <Input

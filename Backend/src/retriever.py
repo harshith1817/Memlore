@@ -11,7 +11,6 @@ from src.memory_store import update_access
 from src.database import SessionLocal
 from src.graph import expand_query
 from sklearn.metrics.pairwise import cosine_similarity
-from sqlalchemy import DateTime
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -62,7 +61,7 @@ def retrieve(user_id, query, top_k=3):
     query_emb = get_embedding(expanded).reshape(1, -1)
     query_keywords = tokenize(query)
 
-    is_broad = len(query_keywords) == 0   # key fix
+    is_broad = len(query_keywords) == 0
 
     scored = []
 

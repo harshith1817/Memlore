@@ -15,3 +15,4 @@ textblob
 groq
 python-dotenv
 authlib
+pydantic[email]

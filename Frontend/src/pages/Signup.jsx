@@ -14,7 +14,7 @@ const Container = styled.div`
 
 const Card = styled.div`
   width: 25%;
-  height: 62.5%;
+  height: 67.5%;
   background: #1e293b;
   padding: 30px;
   border-radius: 12px;
@@ -103,15 +103,69 @@ const Github=styled.button`
   font-weight: 1rem;
 `;
 
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 1.2rem 0;
+`;
+
+const Line = styled.div`
+  flex: 1;
+  height: 1px;
+  background: #475569;
+  opacity: 0.5;
+`;
+
+const OrText = styled.span`
+  margin: 0 12px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  letter-spacing: 1px;
+`;
+
+const ErrorText = styled.p`
+  color: #f87171;
+  font-size: 0.9rem;
+  margin: 4px 0 4px 0;
+  line-height: 1.2;
+`;
 
 function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [serverMsg, setServerMsg] = useState("");
+  const [isError, setIsError] = useState(false);
   const navigate = useNavigate();
 
+  const handleKeyDown = (e) => {
+  if (e.key === "Enter") signup();
+  };
+
+    const validate = () => {
+    let valid = true;
+
+    setEmailError("");
+    setPasswordError("");
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError("Enter a valid email address");
+      valid = false;
+    }
+
+    const passwordRegex = /^(?=.*[A-Z]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setPasswordError("Min 8 chars & at least 1 uppercase letter");
+      valid = false;
+    }
+
+    return valid;
+  };
+
   const signup = async () => {
-    if (!email || !password) {
-      alert("Please fill all fields");
+    if (!validate()) {
       return;
     }
 
@@ -121,22 +175,25 @@ function Signup() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("Account created successfully!");
-        navigate("/");
+        setServerMsg("Account created successfully!");
+        setIsError(false);
+
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+
       } else {
-        alert(data.detail || "Signup failed");
+        setServerMsg(data.detail || data.error || "Signup failed");
+        setIsError(true);
       }
     } catch (err) {
-      console.error("Signup error:", err);
+      console.error(err);
     }
   };
 
@@ -150,11 +207,17 @@ function Signup() {
         </HeadDiv>
         <Google onClick={() => {
           window.location.href = "http://localhost:8000/auth/google";
-        }}><FaGoogle/> Continue with Google</Google>
+        }}><FaGoogle size={15}/> Continue with Google</Google>
 
         <Github onClick={() => {
           window.location.href = "http://localhost:8000/auth/github";
-        }}><FaGithub/> Continue with Github</Github>
+        }}><FaGithub size={15}/> Continue with Github</Github>
+
+                <Divider>
+                  <Line />
+                  <OrText>OR</OrText>
+                  <Line />
+                </Divider>
 
         <FieldDiv>
           <Text>Email address</Text>
@@ -162,8 +225,13 @@ function Signup() {
             type="email"
             placeholder="Enter your email address"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError("");
+            }}
+            onKeyDown={handleKeyDown}
           />
+          {emailError && <ErrorText>{emailError}</ErrorText>}
         </FieldDiv>
 
         <FieldDiv>
@@ -172,10 +240,19 @@ function Signup() {
             type="password"
             placeholder="Create a password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setPasswordError("");
+            }}
+            onKeyDown={handleKeyDown}
           />
+          {passwordError && <ErrorText>{passwordError}</ErrorText>}
         </FieldDiv>
-
+        {serverMsg && (
+          <ErrorText style={{ color: isError ? "#f87171" : "#22c55e" }}>
+            {serverMsg}
+          </ErrorText>
+        )}
         <Button onClick={signup}>Create an account</Button>
 
         <LinkText>
