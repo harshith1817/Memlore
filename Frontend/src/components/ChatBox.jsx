@@ -166,8 +166,10 @@ function ChatBox(){
     ]);
 
     try {
+        const BASE_URL = "https://harshith1817-memlore.hf.space";
+
         const res = await fetch(
-            `http://127.0.0.1:8000/query?q=${encodeURIComponent(text)}`,
+            `${BASE_URL}/query?q=${encodeURIComponent(text)}`,
             {
                 headers: {
                     token: localStorage.getItem("token"),
@@ -263,12 +265,12 @@ function ChatBox(){
                                     const confirm = window.confirm("Delete all memories?");
                                     if (!confirm) return;
 
-                                    await fetch("http://localhost:8000/clear-memory", {
-                                        method: "DELETE",
-                                        headers: {
-                                            token: localStorage.getItem("token"),
-                                        },
-                                    });
+                                await fetch(`${BASE_URL}/clear-memory`, {
+                                    method: "DELETE",
+                                    headers: {
+                                        token: localStorage.getItem("token"),
+                                    },
+                                });
                                 }}
                             >
                                 Clear Memory

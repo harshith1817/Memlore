@@ -7,7 +7,6 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 python-jose
-passlib[bcrypt]
 spacy
 nltk
 rapidfuzz
@@ -17,3 +16,5 @@ python-dotenv
 authlib
 pydantic[email]
 itsdangerous
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
