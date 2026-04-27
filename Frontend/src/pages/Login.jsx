@@ -137,7 +137,6 @@ function Login(){
     const[password, setPassword]=useState("");
     const navigate=useNavigate();
     const [serverMsg, setServerMsg] = useState("");
-    const [error, setError] = useState("");
     const [isError, setIsError] = useState(false);
 
     const handleKeyDown = (e) => {
@@ -152,7 +151,8 @@ function Login(){
     }
 
     try {
-        const res = await fetch("http://localhost:8000/login", {
+        // const res = await fetch("http://localhost:8000/login", {
+        const res = await fetch("https://harshith1817-Memlore.hf.space/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -229,11 +229,13 @@ function Login(){
                 </Divider>
                 
                 <Google onClick={() => {
-                  window.location.href = "http://localhost:8000/auth/google";
+                  // window.location.href = "http://localhost:8000/auth/google";
+                  window.location.href = "https://harshith1817-Memlore.hf.space/auth/google";
                 }}><FaGoogle size={15}/> Continue with Google</Google>
 
                 <Github onClick={() => {
-                  window.location.href = "http://localhost:8000/auth/github";
+                  // window.location.href = "http://localhost:8000/auth/github";
+                  window.location.href = "https://harshith1817-Memlore.hf.space/auth/github";
                 }}><FaGithub size={15}/> Continue with Github</Github>
                 <LinkText>
                     Don't have an account?{" "}

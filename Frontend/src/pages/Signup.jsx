@@ -170,7 +170,8 @@ function Signup() {
     }
 
     try {
-      const res = await fetch("http://localhost:8000/signup", {
+      // const res = await fetch("http://localhost:8000/signup", {
+      const res = await fetch("https://harshith1817-Memlore.hf.space/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -206,11 +207,13 @@ function Signup() {
           <h2>Signup</h2>
         </HeadDiv>
         <Google onClick={() => {
-          window.location.href = "http://localhost:8000/auth/google";
+          // window.location.href = "http://localhost:8000/auth/google";
+          window.location.href = "https://harshith1817-Memlore.hf.space/auth/google";
         }}><FaGoogle size={15}/> Continue with Google</Google>
 
         <Github onClick={() => {
-          window.location.href = "http://localhost:8000/auth/github";
+          // window.location.href = "http://localhost:8000/auth/github";
+          window.location.href = "https://harshith1817-Memlore.hf.space/auth/github";
         }}><FaGithub size={15}/> Continue with Github</Github>
 
                 <Divider>

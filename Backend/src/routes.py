@@ -82,7 +82,8 @@ def query_api(q: str, user_id: str = Depends(get_current_user)):
 
 @router.get("/auth/google")
 async def google_login(request: Request):
-    redirect_uri = "http://localhost:8000/auth/google/callback"
+    # redirect_uri = "http://localhost:8000/auth/google/callback"
+    redirect_uri = "https://harshith1817-Memlore.hf.space/auth/google/callback"
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
@@ -121,13 +122,15 @@ async def google_callback(request: Request):
     db.close()
 
     return RedirectResponse(
-        url=f"http://localhost:3000/oauth-success?token={jwt_token}"
+        # url=f"http://localhost:3000/oauth-success?token={jwt_token}"
+        url=f"https://memlore.vercel.app/oauth-success?token={jwt_token}"
     )
     
 
 @router.get("/auth/github")
 async def github_login(request: Request):
-    redirect_uri = "http://localhost:8000/auth/github/callback"
+    # redirect_uri = "http://localhost:8000/auth/github/callback"
+    redirect_uri = "https://harshith1817-Memlore.hf.space/auth/github/callback"
     return await oauth.github.authorize_redirect(request, redirect_uri)
 
 
@@ -167,7 +170,8 @@ async def github_callback(request: Request):
     db.close()
 
     return RedirectResponse(
-        url=f"http://localhost:3000/oauth-success?token={jwt_token}"
+        # url=f"http://localhost:3000/oauth-success?token={jwt_token}"
+        url=f"https://memlore.vercel.app/oauth-success?token={jwt_token}"
     )
     
 
