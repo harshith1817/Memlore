@@ -14,6 +14,11 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   background: #0f172a;
+
+    @media (max-width: 768px) {
+    justify-content: flex-start;
+    padding-top: 12px;
+  }
 `;
 
 const Message = styled.div`
@@ -32,6 +37,11 @@ const BotBubble = styled.div`
     word-wrap: break-word;
     font-size: 1rem;
     text-align: left;
+
+    @media (max-width: 768px) {
+        max-width: 80%;
+    font-size: 0.9rem;
+  }
 `;
 
 const UserBubble = styled.div`
@@ -44,6 +54,11 @@ const UserBubble = styled.div`
     word-wrap: break-word;
     font-size: 1rem;
     text-align: left;
+
+    @media (max-width: 768px) {
+        max-width: 80%;
+        font-size: 0.9rem;
+  }
 `;
 
 const InputContainer = styled.div`
@@ -53,6 +68,9 @@ const InputContainer = styled.div`
   background: #020617;
   border-radius: 25px;
   padding: 5px;
+@media (max-width: 1024px) {
+    width: 100%;
+  }
 `;
 
 const Input = styled.input`
@@ -63,6 +81,14 @@ const Input = styled.input`
   background: transparent;
   color: white;
   font-size: 14px;
+    @media (max-width: 1024px) {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const SendButton = styled.button`
@@ -80,6 +106,9 @@ const Title = styled.h1`
   text-align: center;
   color: #38bdf8;
   margin: 0;
+    @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const ChatFooter = styled.div`
@@ -87,6 +116,13 @@ const ChatFooter = styled.div`
   padding: 10px;
   display: flex;
   justify-content: center;
+@media (max-width: 1024px) {
+    width: 92%;
+  }
+
+  @media (max-width: 768px) {
+    width: 92%;
+  }
 `;
 
 const ChatWindow = styled.div`
@@ -100,6 +136,16 @@ const ChatWindow = styled.div`
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+    @media (max-width: 1024px) {
+    width: 85%;
+  }
+
+  @media (max-width: 768px) {
+    width: 85%;
+    height: calc(100vh - 80px);
+    border-radius: 10px;
+  }
 `;
 
 const MessageContainer = styled.div`
@@ -152,6 +198,17 @@ const HeaderContainer = styled.div`
   width: 50%;
   position: relative;
   margin-bottom: 10px;
+
+    @media (max-width: 1024px) {
+    width: 85%;
+  }
+
+  @media (max-width: 768px) {
+    width: 85%;
+    padding: 0 4px;
+    box-sizing: border-box;
+  }
+
 `;
 
 function ChatBox(){
@@ -230,8 +287,8 @@ function ChatBox(){
                             src={userImg}
                             alt="user"
                             style={{
-                                width: "100%",
-                                height: "100%",
+                                width: "90%",
+                                height: "90%",
                                 objectFit: "cover"
                             }}
                         />

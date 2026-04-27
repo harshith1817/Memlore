@@ -19,6 +19,12 @@ const Card = styled.div`
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    @media (max-width: 1024px) {
+      width: 50%;
+    }
+    @media (max-width: 768px) {
+    width: 70%;
+  }
 `;
 
 const Title = styled.h2`
