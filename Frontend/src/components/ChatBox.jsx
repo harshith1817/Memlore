@@ -4,6 +4,8 @@ import { IoSend } from "react-icons/io5";
 import "./ChatBox.css"
 import userImg from "./user.png";
 
+const BASE_URL = "https://harshith1817-memlore.hf.space";
+
 const Container = styled.div`
   height: 100vh;
   width: 100%;
@@ -166,7 +168,6 @@ function ChatBox(){
     ]);
 
     try {
-        const BASE_URL = "https://harshith1817-memlore.hf.space";
 
         const res = await fetch(
             `${BASE_URL}/query?q=${encodeURIComponent(text)}`,
